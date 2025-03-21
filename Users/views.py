@@ -63,7 +63,7 @@ class RegisterView(APIView):
             otp = str(random.randint(1000, 9999))
             print(otp)
             OTP_STORAGE[phone_number] = otp  
-            # send_sms(phone_number, otp)
+            send_sms(phone_number, otp)
             return Response({'message': 'OTP sent successfully'}, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
