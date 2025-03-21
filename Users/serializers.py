@@ -20,10 +20,10 @@ class UserLoginSerializer(serializers.Serializer):
 class UserUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['username', 'email', 'user_type']
+        fields = ['username', 'email', 'user_type','aadhar_card']
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['phone_number', 'username', 'email', 'user_type']
+        fields = ['phone_number', 'username', 'email', 'user_type', 'aadhar_card']
 

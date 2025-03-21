@@ -20,6 +20,7 @@ packaging==24.2
 pillow==11.1.0
 propcache==0.3.0
 PyJWT==2.9.0
+python-dotenv==1.0.1
 requests==2.32.3
 six==1.17.0
 sqlparse==0.5.3
