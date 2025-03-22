@@ -5,7 +5,7 @@ from .models import User
 class UserRegisterSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['phone_number']
+        fields = ['phone_number','user_type']
 
 class UserLoginSerializer(serializers.Serializer):
     phone_number = serializers.CharField()
@@ -17,13 +17,4 @@ class UserLoginSerializer(serializers.Serializer):
             raise serializers.ValidationError("Invalid credentials")
         return user
 
-class UserUpdateSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = ['username', 'email', 'user_type','aadhar_card']
-
-class UserSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = ['phone_number', 'username', 'email', 'user_type', 'aadhar_card']
 

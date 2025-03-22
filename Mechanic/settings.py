@@ -34,6 +34,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'Users',
     'Vehicle',
+    'Detail',
 ]
 
 # Middleware configuration

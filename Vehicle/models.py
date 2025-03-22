@@ -9,6 +9,8 @@ class Vehicle(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     vehicle_number = models.CharField(max_length=30, unique=True)
     vehicle_model = models.CharField(max_length=150)
+    vehicle_type = models.CharField(max_length=150)
+    fuel_type = models.CharField(max_length=150)
     vehicle_company = models.CharField(max_length=150)
     vehicle_image = CloudinaryField('image')
     vehicle_document = CloudinaryField('document',resource_type='raw')

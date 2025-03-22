@@ -9,9 +9,6 @@ from django.core.mail import send_mail
 from django.contrib.auth.tokens import default_token_generator
 from django.utils.http import urlsafe_base64_encode
 from django.utils.encoding import force_bytes
-from .serializers import UserRegisterSerializer, UserLoginSerializer, UserUpdateSerializer,UserSerializer
-from rest_framework.permissions import IsAuthenticated
-from rest_framework_simplejwt.authentication import JWTAuthentication
 from twilio.rest import Client
 from Mechanic.settings import TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_PHONE_NUMBER
 from django.shortcuts import render, redirect
@@ -19,22 +16,7 @@ from django.utils.http import urlsafe_base64_decode
 from django.contrib.auth.hashers import make_password
 from django.http import HttpResponse
 from django.utils.encoding import force_str
-
-
-class UpdateUserView(APIView):
-    authentication_classes = [JWTAuthentication]  # Ensures JWT authentication
-    permission_classes = [IsAuthenticated]  # Blocks unauthenticated users
-
-    def patch(self, request, *args, **kwargs):
-        user = request.user  # This should be an authenticated user
-        if user.is_anonymous:
-            return Response({"detail": "Authentication credentials were not provided."}, status=401)
-
-        serializer = UserSerializer(user, data=request.data, partial=True)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=400)
+from .serializers import UserRegisterSerializer, UserLoginSerializer
 
 
 User = get_user_model()
@@ -63,7 +45,7 @@ class RegisterView(APIView):
             otp = str(random.randint(1000, 9999))
             print(otp)
             OTP_STORAGE[phone_number] = otp  
-            send_sms(phone_number, otp)
+            # send_sms(phone_number, otp)
             return Response({'message': 'OTP sent successfully'}, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -74,13 +56,15 @@ class OTPVerifyView(APIView):
         phone_number = request.data.get('phone_number')
         otp = request.data.get('otp')
         password = request.data.get('password')
-        if(not phone_number or not otp or not password):
+        user_type = request.data.get('user_type')
+        if(not phone_number or not otp or not password or not user_type):
             return Response({'error': 'All fields are required'}, status=status.HTTP_400_BAD_REQUEST)
 
         if OTP_STORAGE.get(phone_number) == otp:
-            user = User.objects.create_user(phone_number=phone_number, password=password)
+            user=User.objects.create_user(phone_number=phone_number, password=password, user_type=user_type)
+            refresh = RefreshToken.for_user(user)
             del OTP_STORAGE[phone_number]
-            return Response({'message': 'User registered successfully'}, status=status.HTTP_201_CREATED)
+            return Response({'message': 'User registered successfully','access':str(refresh.access_token)}, status=status.HTTP_201_CREATED)
         return Response({'error': 'Invalid OTP'}, status=status.HTTP_400_BAD_REQUEST)
 
 class LoginView(APIView):
@@ -94,20 +78,6 @@ class LoginView(APIView):
             return Response({'access': str(refresh.access_token)}, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-class UpdateUserView(APIView):
-    authentication_classes = [JWTAuthentication]  # Ensures JWT authentication
-    permission_classes = [IsAuthenticated]  # Blocks unauthenticated users
-
-    def patch(self, request, *args, **kwargs):
-        user = request.user  # This should be an authenticated user
-        if user.is_anonymous:
-            return Response({"detail": "Authentication credentials were not provided."}, status=401)
-
-        serializer = UserUpdateSerializer(user, data=request.data, partial=True)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=400)
 
 class ForgotPasswordView(APIView):
     permission_classes = [AllowAny]
@@ -131,14 +101,6 @@ class ForgotPasswordView(APIView):
             return Response({'message': 'Reset link sent via SMS and Email (if available)'}, status=status.HTTP_200_OK)
 
         return Response({'error': 'User not found'}, status=status.HTTP_400_BAD_REQUEST)
-
-class UserDetailView(APIView):
-    authentication_classes = [JWTAuthentication]
-    permission_classes = [IsAuthenticated]
-    def get(self, request):
-        user = request.user
-        serializer = UserSerializer(user)
-        return Response(serializer.data)
 
 
 def reset_password_page(request, uidb64, token):

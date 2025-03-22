@@ -1,3 +1,4 @@
+from typing import Required
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from django.db import models
 
@@ -19,10 +20,7 @@ class UserManager(BaseUserManager):
 
 class User(AbstractBaseUser, PermissionsMixin):
     phone_number = models.CharField(max_length=15, unique=True)
-    username = models.CharField(max_length=150, blank=True, null=True)
-    email = models.EmailField(blank=True, null=True, unique=True)
-    aadhar_card = models.CharField(max_length=15, blank=True, null=True)
-    user_type = models.CharField(max_length=15, choices=[('Customer', 'Customer'), ('Mechanic', 'Mechanic')], default='Customer')
+    user_type = models.CharField(max_length=15, choices=[('Customer', 'Customer'), ('Mechanic', 'Mechanic')])
     
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
