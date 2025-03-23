@@ -21,7 +21,8 @@ class UserManager(BaseUserManager):
 class User(AbstractBaseUser, PermissionsMixin):
     phone_number = models.CharField(max_length=15, unique=True)
     user_type = models.CharField(max_length=15, choices=[('Customer', 'Customer'), ('Mechanic', 'Mechanic')])
-    
+    device_token = models.CharField(max_length=255,null=True, blank=True)
+
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
 

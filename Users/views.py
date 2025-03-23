@@ -57,11 +57,12 @@ class OTPVerifyView(APIView):
         otp = request.data.get('otp')
         password = request.data.get('password')
         user_type = request.data.get('user_type')
+        device_token = request.data.get('device_token')
         if(not phone_number or not otp or not password or not user_type):
             return Response({'error': 'All fields are required'}, status=status.HTTP_400_BAD_REQUEST)
 
         if OTP_STORAGE.get(phone_number) == otp:
-            user=User.objects.create_user(phone_number=phone_number, password=password, user_type=user_type)
+            user=User.objects.create_user(phone_number=phone_number, password=password, user_type=user_type, device_token=device_token)
             refresh = RefreshToken.for_user(user)
             del OTP_STORAGE[phone_number]
             return Response({'message': 'User registered successfully','access':str(refresh.access_token)}, status=status.HTTP_201_CREATED)
@@ -74,6 +75,12 @@ class LoginView(APIView):
         serializer = UserLoginSerializer(data=request.data)
         if serializer.is_valid():
             user = serializer.validated_data
+            device_token = request.data.get("device_token")  # Get device_token from request data
+
+            if device_token:
+                user.device_token = device_token  # Update the device_token
+                user.save(update_fields=["device_token"])  # Save the updated device_token
+
             refresh = RefreshToken.for_user(user)
             return Response({'access': str(refresh.access_token)}, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

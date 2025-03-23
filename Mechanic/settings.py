@@ -4,6 +4,7 @@ import os
 from pathlib import Path
 from datetime import timedelta
 from dotenv import load_dotenv
+import cloudinary
 
 # Load environment variables
 load_dotenv()
@@ -22,6 +23,7 @@ ALLOWED_HOSTS = ["*"]
 
 # Installed apps
 INSTALLED_APPS = [
+    "daphne",
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -30,13 +32,13 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'cloudinary_storage',
     'cloudinary',
-    'rest_framework', 
+    'rest_framework',
     'corsheaders',
     'Users',
     'Vehicle',
     'Detail',
+    "fcm_django",
 ]
-
 # Middleware configuration
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -69,7 +71,7 @@ TEMPLATES = [
 ]
 
 # ASGI application (since you're using Daphne/Channels)
-WSGI_APPLICATION = "Mechanic.wsgi.application"
+ASGI_APPLICATION = "Mechanic.asgi.application"
 
 DATABASES = {
     'default': {
@@ -128,13 +130,6 @@ CORS_ALLOW_CREDENTIALS = True
 
 
 # Cloudinary storage configuration for static and media files
-import cloudinary
-
-cloudinary.config(
-    cloud_name=os.getenv("CLOUD_NAME"),
-    api_key=os.getenv("API_KEY"),
-    api_secret=os.getenv("API_SECRET"),
-)
 
 # Static files storage with Cloudinary
 # STATICFILES_STORAGE = 'cloudinary_storage.storage.StaticHashedCloudinaryStorage'
@@ -143,3 +138,31 @@ DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.RawMediaCloudinaryStorage'
 TWILIO_ACCOUNT_SID = os.getenv("TWILIO_ACCOUNT_SID")
 TWILIO_AUTH_TOKEN = os.getenv("TWILIO_AUTH_TOKEN")
 TWILIO_PHONE_NUMBER = os.getenv("TWILIO_PHONE_NUMBER")
+
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [
+                "redis://default:48s36hYkOeONOIcqU0gKcVsmJI00rDNT@redis-16505.c264.ap-south-1-1.ec2.redns.redis-cloud.com:16505"
+            ],
+        },
+    }
+}
+
+
+
+
+import firebase_admin
+from firebase_admin import credentials
+
+# Load Firebase service account key
+cred = credentials.Certificate("/home/vedan/Desktop/Hacknovate_Backend/Mechanic/Mechanic/firebase_key.json")
+firebase_admin.initialize_app(cred)
+
+
+cloudinary.config(
+    cloud_name=os.getenv("CLOUD_NAME"),
+    api_key=os.getenv("API_KEY"),
+    api_secret=os.getenv("API_SECRET"),
+)

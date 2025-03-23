@@ -20,6 +20,8 @@ class CustomerDetail(models.Model):
     verified=models.BooleanField(default=False)
     phone_number = models.CharField(max_length=15,null=True, blank=True)
     secondary_phone_number = models.CharField(max_length=15,null=True, blank=True)
+    latitude = models.CharField(max_length=150,null=True, blank=True)
+    longitude = models.CharField(max_length=150,null=True, blank=True)
 
     def save(self, *args, **kwargs):
         if isinstance(self.aadhar_image, InMemoryUploadedFile):
@@ -44,8 +46,6 @@ class MechanicDetail(models.Model):
     email = models.EmailField(max_length=150)
     phone_number = models.CharField(max_length=15,null=True, blank=True)
     address = models.CharField(max_length=150)
-    latitude= models.DecimalField(max_digits=10, decimal_places=10,null=True, blank=True)
-    longitude= models.DecimalField(max_digits=10, decimal_places=10, null=True,blank=True)
 
     def save(self, *args, **kwargs):
         if isinstance(self.aadhar_image, InMemoryUploadedFile):
@@ -66,8 +66,18 @@ class ServiceRequest(models.Model):
     problem = models.TextField()
     latitude = models.CharField(max_length=150)
     longitude = models.CharField(max_length=150)
+    woman_children = models.BooleanField(default=False)
     status = models.CharField(max_length=150,choices=[('Active', 'Active'), ('Completed', 'Completed'),('Ongoing', 'Ongoing')], default='Active')
 
     def __str__(self):
         return f"Service Request for {self.vehicle.vehicle_number} by {self.customer.name}"
 
+
+class Notification(models.Model):
+    mechanic = models.ForeignKey(User, on_delete=models.CASCADE, limit_choices_to={"user_type": "mechanic"})
+    message = models.TextField()
+    is_read = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Notification for {self.mechanic.name}"

@@ -4,6 +4,15 @@ from .serializers import CustomerDetailSerializer,MechanicDetailSerializer,Servi
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from fcm_django.models import FCMDevice
+from asgiref.sync import async_to_sync
+from channels.layers import get_channel_layer
+from .models import Notification
+from Users.models import User
+from .consumers import online_mechanics
+from firebase_admin import messaging
+from django.shortcuts import get_object_or_404
+from rest_framework.decorators import api_view
 
 class CustomerDetailView(generics.ListCreateAPIView):
     queryset = CustomerDetail.objects.all()
@@ -70,16 +79,56 @@ class UserDetailView(generics.RetrieveAPIView):
         
         return Response({'detail': 'User details not found'}, status=404)
 
-class ServiceRequestView(generics.ListCreateAPIView):
-    queryset = ServiceRequest.objects.all()
-    serializer_class = ServiceRequestSerializer
+class ServiceRequestView(generics.CreateAPIView):
     authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
-
-    def get_queryset(self):
-        customer = CustomerDetail.objects.filter(user=self.request.user).first()
-        return ServiceRequest.objects.filter(customer=customer)
+    serializer_class = ServiceRequestSerializer
 
     def perform_create(self, serializer):
         customer = CustomerDetail.objects.filter(user=self.request.user).first()
-        serializer.save(customer=customer)
+        service_request = serializer.save(customer=customer)
+
+        mechanics = User.objects.filter(user_type='Mechanic')
+        channel_layer = get_channel_layer()
+
+        for mechanic in mechanics:
+            Notification.objects.create(mechanic=mechanic, message=service_request.problem)
+
+            if self.is_mechanic_online(mechanic):  # Now checks dictionary
+                async_to_sync(channel_layer.group_send)(
+                    f"mechanic_{mechanic.id}",
+                    {"type": "send_notification", "message": service_request.problem},
+                )
+            else:
+                self.send_push_notification(token=self.request.user.device_token,title="New Service Request",body=service_request.problem)
+
+    def is_mechanic_online(self, mechanic):
+        return mechanic.id in online_mechanics  # Check dictionary
+
+    def send_push_notification(self, token, title, body):
+        message = messaging.Message(
+            notification=messaging.Notification(
+                title=title,
+                body=body
+            ),
+            token=token  # The FCM token of the user's device
+        )
+
+        try:
+            response = messaging.send(message)
+            print("Notification sent successfully:", response)
+            return response
+        except Exception as e:
+            print("Error sending notification:", e)
+
+@api_view(["POST"])
+def accept_service_request(request, request_id):
+    service_request = get_object_or_404(ServiceRequest, id=request_id)
+    
+    # Assign mechanic and change status
+    mechanic = get_object_or_404(MechanicDetail, user=request.user)
+    service_request.mechanic = mechanic
+    service_request.status = "Ongoing"
+    service_request.save()
+
+    return Response({"message": "Service request accepted.", "service_request":ServiceRequestSerializer(service_request).data})
