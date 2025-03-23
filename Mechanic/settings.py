@@ -157,7 +157,12 @@ import firebase_admin
 from firebase_admin import credentials
 
 # Load Firebase service account key
-cred = credentials.Certificate("/home/vedan/Desktop/Hacknovate_Backend/Mechanic/Mechanic/firebase_key.json")
+BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Construct the correct path for firebase_key.json
+FIREBASE_CREDENTIALS_PATH = os.path.join(BASE_DIR, "Mechanic/firebase_key.json")
+
+cred = credentials.Certificate(FIREBASE_CREDENTIALS_PATH)
 firebase_admin.initialize_app(cred)
 
 
