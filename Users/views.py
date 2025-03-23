@@ -17,6 +17,7 @@ from django.contrib.auth.hashers import make_password
 from django.http import HttpResponse
 from django.utils.encoding import force_str
 from .serializers import UserRegisterSerializer, UserLoginSerializer
+from Detail.models import CustomerDetail,MechanicDetail
 
 
 User = get_user_model()
@@ -92,6 +93,13 @@ class ForgotPasswordView(APIView):
     def post(self, request):
         phone_number = request.data.get('phone_number')
         user = User.objects.filter(phone_number=phone_number).first()
+        customer = CustomerDetail.objects.filter(user=user).first()
+        mechanic = MechanicDetail.objects.filter(user=user).first()
+        email = None
+        if customer:
+            email = customer.email
+        elif mechanic:
+            email = mechanic.email
 
         if user:
             token = default_token_generator.make_token(user)
@@ -102,8 +110,8 @@ class ForgotPasswordView(APIView):
             # send_sms(phone_number, f"Reset your password using this link: {reset_url}")
 
             # Send Email if available
-            if user.email:
-                send_mail("Password Reset", f"Click the link to reset your password: {reset_url}", "noreply@example.com", [user.email])
+            if email:
+                send_mail("Password Reset", f"Click the link to reset your password: {reset_url}", "noreply@example.com", [email])
 
             return Response({'message': 'Reset link sent via SMS and Email (if available)'}, status=status.HTTP_200_OK)
 
