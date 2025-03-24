@@ -104,7 +104,7 @@ class ForgotPasswordView(APIView):
         if user:
             token = default_token_generator.make_token(user)
             uid = urlsafe_base64_encode(force_bytes(user.pk))
-            reset_url = f"http://127.0.0.1:8000/api/reset-password/{uid}/{token}/"
+            reset_url = f"https://mechanic-backend-rofz.onrender.com/api/reset-password/{uid}/{token}/"
 
             # Send OTP via SMS (Twilio or another SMS service)
             # send_sms(phone_number, f"Reset your password using this link: {reset_url}")
