@@ -46,7 +46,7 @@ class RegisterView(APIView):
             otp = str(random.randint(1000, 9999))
             print(otp)
             OTP_STORAGE[phone_number] = otp  
-            # send_sms(phone_number, otp)
+            send_sms(phone_number, otp)
             return Response({'message': 'OTP sent successfully'}, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -66,7 +66,7 @@ class OTPVerifyView(APIView):
             user=User.objects.create_user(phone_number=phone_number, password=password, user_type=user_type, device_token=device_token)
             refresh = RefreshToken.for_user(user)
             del OTP_STORAGE[phone_number]
-            return Response({'message': 'User registered successfully','access':str(refresh.access_token)}, status=status.HTTP_201_CREATED)
+            return Response({'message': 'User registered successfully','access':str(refresh.access_token),'refresh':str(refresh)}, status=status.HTTP_201_CREATED)
         return Response({'error': 'Invalid OTP'}, status=status.HTTP_400_BAD_REQUEST)
 
 class LoginView(APIView):
@@ -83,7 +83,7 @@ class LoginView(APIView):
                 user.save(update_fields=["device_token"])  # Save the updated device_token
 
             refresh = RefreshToken.for_user(user)
-            return Response({'access': str(refresh.access_token)}, status=status.HTTP_200_OK)
+            return Response({'access': str(refresh.access_token),'refresh': str(refresh)}, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -142,3 +142,8 @@ def reset_password_page(request, uidb64, token):
 
         except (User.DoesNotExist, ValueError, TypeError):
             return HttpResponse("Invalid request", status=400)
+
+class AriseView(APIView):
+    permission_classes = [AllowAny]
+    def get(self, request):
+        return Response({'message': 'Arise'}, status=status.HTTP_200_OK)

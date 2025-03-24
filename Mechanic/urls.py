@@ -16,10 +16,12 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path,include
+from Users.views import AriseView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include('Users.urls')),
     path('api/', include('Vehicle.urls')),
     path('api/', include('Detail.urls')),
+    path('', AriseView.as_view(), name='arise')
 ]
