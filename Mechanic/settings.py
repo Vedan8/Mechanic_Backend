@@ -171,3 +171,18 @@ cloudinary.config(
     api_key=os.getenv("API_KEY"),
     api_secret=os.getenv("API_SECRET"),
 )
+
+from datetime import timedelta
+
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(hours=1),   # Access token expires in 1 hour
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=5),   # Refresh token expires in 5 days
+    "ROTATE_REFRESH_TOKENS": False,                # Set to True if you want a new refresh token with each access token
+    "BLACKLIST_AFTER_ROTATION": True,              # Blacklist old refresh tokens if rotation is enabled
+    "ALGORITHM": "HS256",
+    "SIGNING_KEY": SECRET_KEY,                      # Default signing key (uses Django's SECRET_KEY)
+    "VERIFYING_KEY": None,
+    "AUTH_HEADER_TYPES": ("Bearer",),              # Token prefix in Authorization header
+    "USER_ID_FIELD": "id",
+    "USER_ID_CLAIM": "user_id",
+}

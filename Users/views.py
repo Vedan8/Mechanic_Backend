@@ -16,7 +16,7 @@ from django.utils.http import urlsafe_base64_decode
 from django.contrib.auth.hashers import make_password
 from django.http import HttpResponse
 from django.utils.encoding import force_str
-from .serializers import UserRegisterSerializer, UserLoginSerializer
+from .serializers import UserRegisterSerializer, UserLoginSerializer, AccessTokenSerializer
 from Detail.models import CustomerDetail,MechanicDetail
 
 
@@ -147,3 +147,12 @@ class AriseView(APIView):
     permission_classes = [AllowAny]
     def get(self, request):
         return Response({'message': 'Arise'}, status=status.HTTP_200_OK)
+
+class GetAccessToken(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        serializer = AccessTokenSerializer(data=request.data)
+        if serializer.is_valid():
+            return Response(serializer.validated_data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
